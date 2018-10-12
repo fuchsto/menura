@@ -65,10 +65,31 @@ public:
 
 public:
   frequency_spectrum() = delete;
-  frequency_spectrum(const audio_istream & ais, int num_bins)
-    : _audio_in(ais)
-    , _db_spectrum(num_bins)
-  { }
+
+  template <class SampleInpuBeginIt, class SampleInputEndIt>
+  frequency_spectrum(
+    SampleInpuBeginIt s_begin,
+    SampleInputEndIt  s_end)
+    : _audio_in_begin(s_begin),
+    , _audio_in_end(s_end)
+    , _db_spectrum(std::distance(s_begin, s_end))
+  {
+    data.maxFrameIndex = totalFrames; /* Record for a few seconds. */
+    data.frameIndex = 0;
+
+    data.recordedSamples = (double *) malloc(numBytes); /* From now on,
+                                       recordedSamples is initialised. */
+    data.fftwOutput = (double *) malloc(numBytes);
+    plan = fftw_plan_r2r_1d(NUM_SAMPLES,
+                            data.recordedSamples,
+                            data.fftwOutput,
+                            FFTW_R2HC,
+                            FFTW_ESTIMATE);
+  }
+
+  ~frequency_spectrum() {
+      fftw_destroy_plan(plan);
+  }
 
   friend operator>>(audio_istream & audio_is, self_t & freq_spectrum);
 

@@ -55,6 +55,32 @@
 #include <vector>
 #include <iterator>
 
+
+/**
+ * Note Concept
+ * ===========================================================================
+ *
+ * Program Options      opts
+ * Audio Sample         s
+ * Sample Buffer        buf   ~> Random-Access Sequence of Audio Sample values
+ * Audio Input Stream   ais
+ *
+ *
+ * expression           | semantics
+ * -------------------- | ----------------------------------------------------
+ * audio_istream(opts)  | Configure audio input stream from options, e.g.
+ *                        sample rate (defaults to 44100)
+ * ais >> buf           | Reads buf.size() samples from audio input and fills
+ *                        buffer starting from its first element, overwriting
+ *                        existing values in buffer
+ * ais.is_opened()      | Whether the input stream is ready
+ * ais.close()          | Explicitly flush and close the input stream,
+ *                        implicitly called in destruction of ais
+ *
+ */
+
+
+
 namespace menura {
 
 #define SAMPLE_RATE  (44100)
