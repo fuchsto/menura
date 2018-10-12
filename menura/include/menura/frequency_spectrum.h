@@ -74,15 +74,15 @@ public:
     , _audio_in_end(s_end)
     , _db_spectrum(std::distance(s_begin, s_end))
   {
-    data.maxFrameIndex = totalFrames; /* Record for a few seconds. */
-    data.frameIndex = 0;
+    _sampling_data.maxFrameIndex = totalFrames; /* Record for a few seconds. */
+    _sampling_data.frameIndex = 0;
 
-    data.recordedSamples = (double *) malloc(numBytes); /* From now on,
-                                       recordedSamples is initialised. */
-    data.fftwOutput = (double *) malloc(numBytes);
+    _sampling_data.recordedSamples = (double *) malloc(numBytes);
+    /* From now on, recordedSamples is initialised. */
+    _sampling_data.fftwOutput = (double *) malloc(numBytes);
     plan = fftw_plan_r2r_1d(NUM_SAMPLES,
-                            data.recordedSamples,
-                            data.fftwOutput,
+                            _sampling_data.recordedSamples,
+                            _sampling_data.fftwOutput,
                             FFTW_R2HC,
                             FFTW_ESTIMATE);
   }
@@ -95,14 +95,14 @@ public:
 
   void analyze() {
     while((( err = Pa_IsStreamActive(stream)) == 1)) {
-      data.frameIndex = 0;
+      _sampling_data.frameIndex = 0;
       fftw_execute(plan);
 
       // Post-process frequency spectrum: transform to decibel
       for(int i = 0; i < NUM_BINS; i++){
          db_spectrum[i] = (20 *
-                            log10(sqrt(  data.fftwOutput[i]
-                                       * data.fftwOutput[i]))
+                            log10(sqrt(  _sampling_data.fftwOutput[i]
+                                       * _sampling_data.fftwOutput[i]))
                           );
       }
       std::vector<double>::iterator max = std::max_element(db_spectrum.begin(),
