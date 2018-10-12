@@ -7,6 +7,32 @@
 #include <fstream>
 #include "pa_stream.h"
 
+
+/**
+ * Note Concept
+ * ===========================================================================
+ *
+ * Note        n
+ * Frequency   f : double
+ * Pitch class p
+ * Octave      o : uint8_t
+ *
+ * expression           | semantics
+ * -------------------- | ----------------------------------------------------
+ * note(p,o)            | Create node from pitch class and octave
+ * note(f,ft)           | Create node from frequency f for tuning freq. ft
+ * n1 != n2, n1 == n2   | Equality, inequality
+ * n1 < n2, n1 > n2 ... | Sort comparison, based on pitch range (semitones)
+ * octave(n)            | The note's octave
+ * pitch_class(n)       | The note's pitch class
+ * fundamental_freq(n)  | Fundamental frequency of a note, e.g. 440 for A4
+ * chromatic_index(n)   | The note's offset in the chromatic domain, from
+ *                        0 (lowest note: C-1) to 127 (B9), same as MIDI code
+ * distance(n1, n2)     | Distance between notes, in semitones
+ *
+ */
+
+
 namespace menura {
 
   enum pitch_class {
@@ -33,6 +59,11 @@ namespace menura {
   // };
 
   class note {
+  public:
+    friend std::ostream & operator<<(
+                            std::ostream & lhs,
+                            const menura::note & n);
+
   public:
     note() = delete;
     note(double frequency, double pitch_class = 440.0) {
@@ -81,7 +112,7 @@ namespace menura {
       _octave = rhs.octave;
     }
 
-    // `semitone` Halbtöne höher
+    // Heighten note by given number of semitones
     note & operator+=(int semitone) {
        if (_pitch == B) {
          _octave++; _pitch = C;
@@ -95,7 +126,7 @@ namespace menura {
       return *this += 1;
     }
     
-    // `semitone` Halbtöne tiefer
+    // Lower note by given number of semitones
     note & operator-=(int semitone) {
        if (_pitch == pitch_class::C) {
          _octave--;
@@ -140,15 +171,13 @@ namespace menura {
      uint8_t      _octave;
   };
 
-  std::ostream& operator<<(std::ostream& lhs, menura::note n);
+  std::ostream & operator<<(std::ostream & lhs, const menura::note & n);
 
-  void note_setup();
+  int chromatic_index(const note & n);
 
-  int midi_number_of(note n);
-
-  note note_of(double frequency, double pitch_hz = 440.0);
-
-  static std::vector<note> notes;
+  int distance(const note & a, const & note b) {
+    return chromatic_index(b) - chromatic_index(a);
+  }
 
 } // namespace menura
 
