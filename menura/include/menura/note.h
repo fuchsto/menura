@@ -32,17 +32,6 @@ namespace menura {
   //   double_flat   // bb
   // };
 
-  struct note {
-    pitch_class name;   // C, D, E, ...
-    bool accidental;    // natural, sharp
-    uint8_t octave;     // 0-9
-
-    note(pitch_class n_name, bool n_acc, uint8_t n_oct)
-    : name(n_name)
-    , accidental(n_acc)
-    , octave(n_oct) {}
-  };
-
   class note {
   public:
     note() = delete;
@@ -53,7 +42,10 @@ namespace menura {
       if (frequency != 0) {
         *this += 12 * std::log2(frequency / pitch_hz);
       }
-      double ideal_freq = pitch_hz * std::pow(2.0, (note_idx - a4_idx) / 12.0);
+      double ideal_freq = pitch_hz
+                          * std::pow(
+                              2.0,
+                              (note_idx - a4_idx) / 12.0);
 
       int cent_idx = 0;
       if(frequency != 0) {
@@ -81,10 +73,22 @@ namespace menura {
     note(pitch p, uint8_t octave)
        : _pitch(p), _octave(octave) {  }
 
+    note(const note & other)
+       : _pitch(other.p), _octave(other.octave) {  }
+
+    note & operator=(const note & rhs) {
+      _pitch  = rhs.pitch;
+      _octave = rhs.octave;
+    }
+
     // `semitone` Halbtöne höher
     note & operator+=(int semitone) {
-       if (_pitch == B) { _octave++; _pitch = C; }
-       else { _pitch = static_cast<pitch>(static_cast<int>(_pitch) + 1) }
+       if (_pitch == B) {
+         _octave++; _pitch = C;
+       }
+       else {
+         _pitch = static_cast<pitch_class>(static_cast<int>(_pitch) + 1)
+       }
        return *this;
     }
     note & operator++() {
@@ -93,8 +97,13 @@ namespace menura {
     
     // `semitone` Halbtöne tiefer
     note & operator-=(int semitone) {
-       if (_pitch == C) { _octave--; _pitch = B; }
-       else { _pitch = static_cast<pitch>(static_cast<int>(_pitch) - 1) }
+       if (_pitch == pitch_class::C) {
+         _octave--;
+         _pitch = pitch_class::B;
+       }
+       else {
+         _pitch = static_cast<pitch_class>(static_cast<int>(_pitch) - 1)
+       }
        return *this;
     }
     note & operator--() {
@@ -102,17 +111,17 @@ namespace menura {
     }
 
     bool operator==(const note & rhs) const {
-      return (name == rhs.name
-           && accidental == rhs.accidental
-           && octave == rhs.octave);
+      return    _pitch  == rhs._pitch
+             && _octave == rhs._octave;
     }
     bool operator!=(const note & rhs) const {
       return !(*this == rhs);
     }
 
     bool operator<(const note & rhs) const {
-      return _octave > rhs._octave ||
-             _octave == rhs.octave && _pitch > rhs._pitch;
+      return _octave < rhs._octave ||
+             (   _octave == rhs._octave 
+              && _pitch   < rhs._pitch);
     }
     bool operator<=(const note & rhs) const {
       return *this == rhs || *this < rhs;
